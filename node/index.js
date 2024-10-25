@@ -13,17 +13,34 @@ const config = {
 const connection = mysql.createConnection(config);
 
 app.get('/', (req, res) => {
-    const sql = `INSERT INTO people(name) VALUES ('Teste NGINX')`;
+
+    const insertSql = `INSERT INTO people(name) VALUES ('Teste NGINX')`;
     
-    connection.query(sql, (error, results) => {
+    connection.query(insertSql, (error, results) => {
         if (error) {
             console.error('Erro ao inserir no banco de dados:', error);
             return res.status(500).send('Erro ao inserir no banco de dados');
         }
         
         console.log('Registro inserido com sucesso:', results);
-        res.send('<h1>Full Cycle</h1>');
-    });
+        
+        const selectSql = `SELECT * FROM people`;
+        
+        connection.query(selectSql, (error, results) => {
+            if (error) {
+                console.error('Erro ao buscar no banco de dados:', error);
+                return res.status(500).send('Erro ao buscar no banco de dados');
+            }
+            
+            let html = '<h1>Full Cycle</h1><ul>';
+            results.forEach(person => {
+                html += `<li>${person.name}</li>`;
+            });
+            html += '</ul>';
+            
+            res.send(html);
+        });
+    });    
     
 });
 
