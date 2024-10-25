@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+    networks:
+      - desafio-network 
+
+  app:
+    build: 
+      context: ./node  
+    image: vitorsaop/app:latest
+    container_name: app
+    entrypoint: ["dockerize", "-wait", "tcp://db:3306", "-timeout", "20s", "npm", "start"]
+    networks:
+      - desafio-network
+    volumes:
+      - ./node:/usr/src/app
+      - /usr/src/app/node_modules  
+    tty: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d 
+    environment:
+      - MYSQL_DATABASE=desafio
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=user
+    networks:
+      - desafio-network
+
+networks:
+  desafio-network:
+    driver: bridge
+
+volumes:
+  db_data:
